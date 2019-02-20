@@ -63,8 +63,15 @@
     },
     "variables": {
         "dcServername": "azuredc",
-        "vnetID": "[resourceId('Microsoft.Network/virtualNetworks/', concat(variables('dcServerName'),'-vnet'))]",
-        "subnetRef": "[concat(variables('vnetID'),'/subnets/', concat(variables('dcServerName'),'-subnet'))]",
+        "adcServerName": "azureadc",
+        "publicIPAddressName": "[tolower(concat('adpip',uniqueString(resourceGroup().Id)))]",
+        "adVnetName": "[concat('ADVNET',resourceGroup().name)]",
+        "adSubnetName": "[concat('ADStaticSubnet',resourceGroup().name)]",
+        "updateVNetDNS1": "updateVNetDNS",
+        "vnetAddressRange": "10.0.0.0/24",
+        "subnetAddressRange": "10.0.0.0/26",
+        "dnsServerPrivateIp": "10.0.0.4",
+        "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks', variables('adVnetName')),'/subnets/', variables('adSubnetName'))]",
         "vaultName": "RecoveryServicesVault",
         "backupFabric": "Azure",
         "backupPolicyName": "DefaultPolicy",
@@ -80,16 +87,25 @@
         "wadcfgxstart": "[concat(variables('wadlogs'), variables('wadperfcounters1'), variables('wadperfcounters2'), '<Metrics resourceId=\"')]",
         "wadmetricsresourceid": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name , '/providers/', 'Microsoft.Compute/virtualMachines/')]",
         "wadcfgxend": "\"><MetricAggregation scheduledTransferPeriod=\"PT1H\"/><MetricAggregation scheduledTransferPeriod=\"PT1M\"/></Metrics></DiagnosticMonitorConfiguration></WadCfg>",
-        "nestedUri": 
+        "nestedUri": "https://raw.githubusercontent.com/rbergertd/o365adds/master/nested/",
+        "nestedVnetDeploy": "vnet-with-dns-server.json",
         "dscUri": "https://github.com/rbergertd/o365adds/raw/master/",
         "dscZipFile": "builddc.zip",
-        "dscConfiguration": "dsc_createdomain.ps1\\CreateADPDC"
+        "dscConfiguration": "dsc_createdomain.ps1\\CreateADPDC",
+        "subnets": [
+            {
+                "name": "[variables('adSubnetName')]",
+                "properties": {
+                    "addressPrefix": "[variables('subnetAddressRange')]"
+                }
+            }
+        ]
     },
     "resources": [
         {
             "apiVersion": "2016-03-30",
             "type": "Microsoft.Network/publicIPAddresses",
-            "name": "[concat(variables('dcServerName'),'-public')]",
+            "name": "[variables('publicIPAddressName')]",
             "location": "[resourceGroup().location]",
             "properties": {
                 "publicIPAllocationMethod": "Dynamic",
@@ -101,19 +117,19 @@
         {
             "apiVersion": "2016-03-30",
             "type": "Microsoft.Network/virtualNetworks",
-            "name": "[concat(variables('dcServerName'),'-vnet')]",
+            "name": "[variables('adVnetName')]",
             "location": "[resourceGroup().location]",
             "properties": {
                 "addressSpace": {
                     "addressPrefixes": [
-                        "10.0.0.0/16"
+                        "[variables('vnetAddressRange')]"
                     ]
                 },
                 "subnets": [
                     {
                         "name": "[concat(variables('dcServerName'),'-subnet')]",
                         "properties": {
-                            "addressPrefix": "10.0.0.0/24"
+                            "addressPrefix": "[variables('subnetAddressRange')]"
                         }
                     }
                 ]
@@ -138,7 +154,7 @@
                                 "id": "[resourceId('Microsoft.Network/publicIPAddresses/', concat(variables('dcServerName'),'-public'))]"
                             },
                             "subnet": {
-                                "id": "[variables('subnetRef')]"
+                                "id": "[variables('subnet-id')]"
                             }
                         }
                     }
@@ -296,6 +312,37 @@
                 "protectedSettings": {
                     "items": {
                         "adminPassword": "[parameters('adminPassword')]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "[variables('updateVNetDNS1')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2016-02-01",
+            "dependsOn": [
+                "[concat(variables('dcServerName'),'/InstallDomainController')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(variables('nestedUri'), variables('nestedVnetDeploy'))]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "virtualNetworkName": {
+                        "value": "[variables('adVnetName')]"
+                    },
+                    "virtualNetworkAddressRange": {
+                        "value": "[variables('vnetAddressRange')]"
+                    },
+                    "subnets": {
+                        "value": "[variables('subnets')]"
+                    },
+                    "dnsServerAddress": {
+                        "value": [
+                            "[variables('dnsServerPrivateIp')]"
+                        ]
                     }
                 }
             }
