@@ -127,7 +127,7 @@
                 },
                 "subnets": [
                     {
-                        "name": "[concat(variables('dcServerName'),'-subnet')]",
+                        "name": "[variables('adSubnetName')]",
                         "properties": {
                             "addressPrefix": "[variables('subnetAddressRange')]"
                         }
@@ -141,8 +141,8 @@
             "name": "[concat(variables('dcServerName'),'-nic')]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/publicIPAddresses/', concat(variables('dcServerName'),'-public'))]",
-                "[resourceId('Microsoft.Network/virtualNetworks/', concat(variables('dcServerName'),'-vnet'))]"
+                "[variables('publicIPAddressName')]",
+                "[variables('adVnetName')]"
             ],
             "properties": {
                 "ipConfigurations": [
