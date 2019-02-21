@@ -344,7 +344,7 @@
                 "[variables('adVnetName')]",
                 "[resourceId('Microsoft.Network/networkInterfaces/', concat(variables('dcServerName'),'-nic'))]",
                 "[concat('Microsoft.Compute/virtualMachines/', variables('dcServerName'))]",
-                "[resourceId('Microsoft.Resources/deployments/', variables('updateVNetDNS1'))]"
+                "[concat('Microsoft.Resources/deployments/', variables('updateVNetDNS1'))]"
             ],
             "properties": {
                 "ipConfigurations": [
