@@ -61,6 +61,7 @@
         "backupPolicyName": "DefaultPolicy",
         "protectionContainer": "[concat('iaasvmcontainer;iaasvmcontainerv2;', resourceGroup().name, ';', variables('dcServername'))]",
         "protectedItem": "[concat('vm;iaasvmcontainerv2;', resourceGroup().name, ';', variables('dcServername'))]",
+        "protectedItem2": "[concat('vm;iaasvmcontainerv2;', resourceGroup().name, ';', variables('adcServername'))]",
         "storageAccountName": "[concat(variables('dcServerName'), 'sa')]",
         "storageAccountType": "Standard_LRS",
         "dcDataDisk": "32",
@@ -357,14 +358,14 @@
         {
             "apiVersion": "2018-06-01",
             "type": "Microsoft.Compute/virtualMachines",
-            "name": "[variables('dcServerName')]",
+            "name": "[variables('adcServerName')]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/networkInterfaces/', concat(variables('adcServerName'),'-nic'))]"
             ],
             "properties": {
                 "hardwareProfile": {
-                    "vmSize": "[parameters('virtualMachineSize')]"
+                    "vmSize": "Standard_B1ms"
                 },
                 "osProfile": {
                     "computerName": "[variables('adcServerName')]",
@@ -405,7 +406,7 @@
         {
             "apiVersion": "2016-12-01",
             "type": "Microsoft.RecoveryServices/vaults/backupFabrics/protectionContainers/protectedItems",
-            "name": "[concat(variables('vaultName'), '/', variables('backupFabric'), '/', variables('protectionContainer'), '/', variables('protectedItem'))]",
+            "name": "[concat(variables('vaultName'), '/', variables('backupFabric'), '/', variables('protectionContainer'), '/', variables('protectedItem2'))]",
             "dependsOn": [
                 "[resourceId('Microsoft.Compute/virtualMachines/', variables('adcServerName'))]",
                 "[resourceId('Microsoft.RecoveryServices/vaults/', variables('vaultName'))]"
