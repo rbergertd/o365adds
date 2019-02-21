@@ -25,12 +25,6 @@
                 "description": "The Windows version for the VM. This will pick a fully patched image of this given Windows version."
             }
         },
-        "dcServerName": {
-            "type": "string",
-            "metadata": {
-                "description": "The host name of the domain controller."
-            }
-        },
         "virtualMachineSize": {
             "type": "string",
             "defaultValue": "Standard_DS1_v2",
@@ -79,6 +73,7 @@
         "protectedItem": "[concat('vm;iaasvmcontainerv2;', resourceGroup().name, ';', variables('dcServername'))]",
         "storageAccountName": "[concat(variables('dcServerName'), 'sa')]",
         "storageAccountType": "Standard_LRS",
+        "dcDataDisk": "40",
         "extensionName": "Microsoft.Insights.VMDiagnosticsSettings",
         "dscExtensionName": "InstallDomainController",
         "accountid": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/','Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
@@ -208,7 +203,7 @@
                     "dataDisks": [
                         {
                             "name": "[concat(variables('dcServerName'),'-dataDisk')]",
-                            "diskSizeGB": "[parameters('dataDiskSize')]",
+                            "diskSizeGB": "[variables('dcDataDisk')]",
                             "lun": 0,
                             "createOption": "Empty",
                             "caching": "None"
@@ -247,7 +242,7 @@
                         "typeHandlerVersion": "1.5",
                         "autoUpgradeMinorVersion": true,
                         "settings": {
-                            "xmlCfg": "[base64(concat(variables('wadcfgxstart'), variables('wadmetricsresourceid'), parameters('dcServerName'), variables('wadcfgxend')))]",
+                            "xmlCfg": "[base64(concat(variables('wadcfgxstart'), variables('wadmetricsresourceid'), variables('dcServerName'), variables('wadcfgxend')))]",
                             "storageAccount": "[variables('storageAccountName')]"
                         },
                         "protectedSettings": {
@@ -348,5 +343,6 @@
                 }
             }
         }
+
     ]
 }
