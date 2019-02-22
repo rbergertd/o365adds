@@ -22,10 +22,10 @@
                 "2016-Datacenter"
             ],
             "metadata": {
-                "description": "The Windows version for the VM. This will pick a fully patched image of this given Windows version."
+                "description": "The Windows version for both virtual machines. This will pick a fully patched image of this given Windows version."
             }
         },
-        "virtualMachineSize": {
+        "dcVirtualMachineSize": {
             "type": "string",
             "defaultValue": "Standard_DS1_v2",
             "allowedValues": [
@@ -35,13 +35,26 @@
                 "Standard_DS4_v2"
             ],
             "metadata": {
-                "description": "The size of the virtual machine. DS1v2 - 1vCPU/3.5GB vRAM, DS2v2 - 2vCPU/7GB vRAM, DS3v2 - 4vCPU/14GB vRAM. DS4v2 - 8vCPU/28GB vRAM."
+                "description": "The size of the Domain Controller virtual machine. For most use cases, DS1v2 (1vCPU/3.5GB vRAM) or DS2v2 (2vCPU/7GB vRAM) will be sufficient. If you plan on running other services on top of your domain controller, consider DS3v2 (4vCPU/14GB vRAM) or DS4v2 (8vCPU/28GB vRAM)."
             }
+        },
+        "addtlDataDiskSize": {
+            "type": "string",
+            "defaultValue": "32",
+            "allowedValues": [
+                "32",
+                "64",
+                "128",
+                "256",
+                "512",
+                "1024",
+                "2048"
+            ]
         },
         "fqDomainName": {
             "type": "string",
             "metadata": {
-                "description": "The Domain name for the newly created ADDS domain."
+                "description": "The Domain name for the newly created ADDS domain. In order to use the AD Connect synchronization, this must be a routable domain that is verified in Office 365/Azure Active Directory. It must be a valid Internet domain name (for example, .com, .org, .net, .us, etc.)."
             }
         }
     },
@@ -57,7 +70,7 @@
         "subnetAddressRange": "10.0.0.0/26",
         "dnsServerPrivateIp": "10.0.0.4",
         "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks', variables('adVnetName')),'/subnets/', variables('adSubnetName'))]",
-        "vaultName": "RecoveryServicesVault",
+        "vaultName": "AzureBackupVault",
         "backupFabric": "Azure",
         "backupPolicyName": "DefaultPolicy",
         "protectionContainer": "[concat('iaasvmcontainer;iaasvmcontainerv2;', resourceGroup().name, ';', variables('dcServername'))]",
@@ -171,7 +184,7 @@
             ],
             "properties": {
                 "hardwareProfile": {
-                    "vmSize": "[parameters('virtualMachineSize')]"
+                    "vmSize": "[parameters('dcVirtualMachineSize')]"
                 },
                 "osProfile": {
                     "computerName": "[variables('dcServerName')]",
@@ -190,14 +203,21 @@
                         "caching": "ReadWrite",
                         "createOption": "FromImage",
                         "managedDisk": {
-                            "storageAccountType": "StandardSSD_LRS"
+                            "storageAccountType": "Premium_LRS"
                         }
                     },
                     "dataDisks": [
                         {
-                            "name": "[concat(variables('dcServerName'),'-dataDisk')]",
+                            "name": "[concat(variables('dcServerName'),'-dcDataDrive')]",
                             "diskSizeGB": "[variables('dcDataDisk')]",
                             "lun": 0,
+                            "createOption": "Empty",
+                            "caching": "None"
+                        },
+                        {
+                            "name": "[concat(variables('dcServerName'),'-addtlDataDrive')]",
+                            "diskSizeGB": "[parameters('addtlDataDiskSize')]",
+                            "lun": 1,
                             "createOption": "Empty",
                             "caching": "None"
                         }
@@ -414,25 +434,25 @@
                     "name": "[concat(variables('adcServerName'),'/joindomain')]",
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
-                      "[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('dcServerName'), variables('dscExtensionName'))]",
-                      "[resourceId('Microsoft.Compute/virtualMachines/', variables('adcServerName'))]",
-                      "[variables('updateVNetDNS1')]"
+                        "[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('dcServerName'), variables('dscExtensionName'))]",
+                        "[resourceId('Microsoft.Compute/virtualMachines/', variables('adcServerName'))]",
+                        "[variables('updateVNetDNS1')]"
                     ],
                     "properties": {
-                      "publisher": "Microsoft.Compute",
-                      "type": "JsonADDomainExtension",
-                      "typeHandlerVersion": "1.3",
-                      "autoUpgradeMinorVersion": true,
-                      "settings": {
-                        "Name": "[parameters('fqDomainName')]",
-                        "OUPath": "",
-                        "User": "[concat(parameters('fqDomainName'), '\\', parameters('adminUsername'))]",
-                        "Restart": "true",
-                        "Options": "[variables('domainJoinOptions')]"
-                      },
-                      "protectedSettings": {
-                        "Password": "[parameters('adminPassword')]"
-                      }
+                        "publisher": "Microsoft.Compute",
+                        "type": "JsonADDomainExtension",
+                        "typeHandlerVersion": "1.3",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                            "Name": "[parameters('fqDomainName')]",
+                            "OUPath": "",
+                            "User": "[concat(parameters('fqDomainName'), '\\', parameters('adminUsername'))]",
+                            "Restart": "true",
+                            "Options": "[variables('domainJoinOptions')]"
+                        },
+                        "protectedSettings": {
+                            "Password": "[parameters('adminPassword')]"
+                        }
                     }
                 }
             ]
@@ -453,5 +473,3 @@
         }
     ]
 }
-
-    
