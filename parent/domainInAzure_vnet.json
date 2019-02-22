@@ -456,7 +456,7 @@
                     }
                 },
                 {
-                    "apiVersion": "2015-05-01-preview",
+                    "apiVersion": "2018-06-01",
                     "type": "Microsoft.Compute/virtualMachines/extensions",
                     "name": "[concat(variables('adcServerName'),'/getADC')]",
                     "location": "[resourceGroup().location]",
@@ -468,8 +468,7 @@
                     "properties": {
                       "publisher": "Microsoft.Compute",
                       "type": "CustomScriptExtension",
-                      "typeHandlerVersion": "2.0",
-                      "autoUpgradeMinorVersion": true,
+                      "typeHandlerVersion": "1.9",
                       "settings": {
                         "fileUris": [
                             "[concat(variables('baseUri'), 'getADC.ps1')]"
