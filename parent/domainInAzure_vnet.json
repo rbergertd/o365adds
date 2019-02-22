@@ -64,7 +64,7 @@
         "protectionContainer2": "[concat('iaasvmcontainer;iaasvmcontainerv2;', resourceGroup().name, ';', variables('adcServername'))]",
         "protectedItem": "[concat('vm;iaasvmcontainerv2;', resourceGroup().name, ';', variables('dcServername'))]",
         "protectedItem2": "[concat('vm;iaasvmcontainerv2;', resourceGroup().name, ';', variables('adcServername'))]",
-        "storageAccountName": "[concat(variables('dcServerName'), 'sa')]",
+        "storageAccountName": "[concat('diagsa', uniquestring(resourceGroup().id))]",
         "storageAccountType": "Standard_LRS",
         "dcDataDisk": "32",
         "extensionName": "Microsoft.Insights.VMDiagnosticsSettings",
@@ -406,7 +406,36 @@
                         "storageUri": "[reference(resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))).primaryEndpoints.blob]"
                     }
                 }
-            }
+            },
+            "resources": [
+                {
+                    "apiVersion": "2015-06-15",
+                    "type": "Microsoft.Compute/virtualMachines/extensions",
+                    "name": "[concat(variables('adcServerName'),'/joindomain')]",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                      "[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('dcServerName'), variables('dscExtensionName'))]",
+                      "[resourceId('Microsoft.Compute/virtualMachines/', variables('adcServerName'))]",
+                      "[variables('updateVNetDNS1')]"
+                    ],
+                    "properties": {
+                      "publisher": "Microsoft.Compute",
+                      "type": "JsonADDomainExtension",
+                      "typeHandlerVersion": "1.3",
+                      "autoUpgradeMinorVersion": true,
+                      "settings": {
+                        "Name": "[parameters('fqDomainName')]",
+                        "OUPath": "",
+                        "User": "[concat(parameters('fqDomainName'), '\\', parameters('adminUsername'))]",
+                        "Restart": "true",
+                        "Options": "[variables('domainJoinOptions')]"
+                      },
+                      "protectedSettings": {
+                        "Password": "[parameters('adminPassword')]"
+                      }
+                    }
+                }
+            ]
         },
         {
             "apiVersion": "2016-12-01",
@@ -420,33 +449,6 @@
                 "protectedItemType": "Microsoft.Compute/virtualMachines",
                 "policyId": "[resourceId('Microsoft.RecoveryServices/vaults/backupPolicies', variables('vaultName'), variables('backupPolicyName'))]",
                 "sourceResourceId": "[resourceId('Microsoft.Compute/virtualMachines/', variables('adcServerName'))]"
-            }
-        },
-        {
-            "apiVersion": "2015-06-15",
-            "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(parameters('fqDomainName'),'/joindomain')]",
-            "location": "[resourceGroup().location]",
-            "dependsOn": [
-              "[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('dcServerName'), variables('dscExtensionName'))]",
-              "[resourceId('Microsoft.Compute/virtualMachines/', variables('adcServerName'))]",
-              "[variables('updateVNetDNS1')]"
-            ],
-            "properties": {
-              "publisher": "Microsoft.Compute",
-              "type": "JsonADDomainExtension",
-              "typeHandlerVersion": "1.3",
-              "autoUpgradeMinorVersion": true,
-              "settings": {
-                "Name": "[parameters('fqDomainName')]",
-                "OUPath": "",
-                "User": "[concat(parameters('fqDomainName'), '\\', parameters('adminUsername'))]",
-                "Restart": "true",
-                "Options": "[variables('domainJoinOptions')]"
-              },
-              "protectedSettings": {
-                "Password": "[parameters('adminPassword')]"
-              }
             }
         }
     ]
