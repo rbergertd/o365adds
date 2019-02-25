@@ -49,7 +49,10 @@
                 "512",
                 "1024",
                 "2048"
-            ]
+            ],
+            "metadata": {
+                "description": "An additional data disk is added to the domain controller for you to store and share data on. Please pick the size you would allocated to this disk."
+            }
         },
         "fqDomainName": {
             "type": "string",
