@@ -115,7 +115,7 @@
             "properties": {
                 "publicIPAllocationMethod": "Dynamic",
                 "dnsSettings": {
-                    "domainNameLabel": "[concat(variables('dcServerName'),'-public')]"
+                    "domainNameLabel": "[concat(variables('dcServerName'),uniqueString(resourceGroup().Id))]"
                 }
             }
         },
