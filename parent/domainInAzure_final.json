@@ -27,11 +27,11 @@
         },
         "dcVirtualMachineSize": {
             "type": "string",
-            "defaultValue": "Standard_DS2_v3",
+            "defaultValue": "Standard_DS2_v2",
             "allowedValues": [
-                "Standard_DS2_v3",
-                "Standard_DS3_v3",
-                "Standard_DS4_v3"
+                "Standard_DS2_v2",
+                "Standard_DS3_v2",
+                "Standard_DS4_v2"
             ],
             "metadata": {
                 "description": "The size of the Domain Controller virtual machine. For most use cases, DS2v2 (2vCPU/7GB vRAM) will be sufficient. If you plan on running other services on top of your domain controller, consider DS3v2 (4vCPU/14GB vRAM) or DS4v2 (8vCPU/28GB vRAM)."
