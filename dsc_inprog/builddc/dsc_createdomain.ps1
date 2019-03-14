@@ -63,7 +63,7 @@
             RetryCount = $RetryCount
         }
 
-        xDisk ADDataDisk 2 {
+        xDisk ADDataDisk {
             DiskNumber = 2
             DriveLetter = "F"
             FSLabel = "AD"
@@ -77,7 +77,7 @@
             RetryCount = $RetryCount
         }
 
-        xDisk ADDataDisk 3 {
+        xDisk AddtlDataDisk {
             DiskNumber = 3
             DriveLetter = "G"
             FSLabel = "Data"
@@ -119,7 +119,7 @@
             DatabasePath = "F:\NTDS"
             LogPath = "F:\NTDS"
             SysvolPath = "F:\SYSVOL"
-	        DependsOn = "[xDisk]ADDataDisk 2"
+	        DependsOn = "[xDisk]ADDataDisk"
         } 
 
         xADRecycleBin RecycleBin            
