@@ -35,7 +35,7 @@
                 "Standard_DS4_v2"
             ],
             "metadata": {
-                "description": "The size of the Domain Controller virtual machine. For most use cases, DS2v2 (2vCPU/7GB vRAM) will be sufficient. If you plan on running other services on top of your domain controller, consider DS3v2 (4vCPU/14GB vRAM) or DS4v2 (8vCPU/28GB vRAM)."
+                "description": "The size of the Domain Controller virtual machine. We have given you an option of using a burstable machine for the domain controller, which in most use cases will be adequate as the CPU requirements for AD DS are not high. If you plan on running other services on top of your domain controller, consider the other options, DS2v2 (2vCPU/7GB vRAM), DS3v2 (4vCPU/14GB vRAM) or DS4v2 (8vCPU/28GB vRAM)."
             }
         },
         "addtlDataDiskSize": {
