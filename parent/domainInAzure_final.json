@@ -27,9 +27,8 @@
         },
         "dcVirtualMachineSize": {
             "type": "string",
-            "defaultValue": "Standard_DS2_v2",
+            "defaultValue": "Standard_B2ms",
             "allowedValues": [
-                "Standard_B2s",
                 "Standard_B2ms",
                 "Standard_DS2_v2",
                 "Standard_DS3_v2",
