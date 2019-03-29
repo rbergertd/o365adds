@@ -30,9 +30,9 @@
             "defaultValue": "Standard_B2ms",
             "allowedValues": [
                 "Standard_B2ms",
-                "Standard_DS2_v2",
-                "Standard_DS3_v2",
-                "Standard_DS4_v2"
+                "Standard_D2s_v3",
+                "Standard_D4s_v3",
+                "Standard_D8s_v3"
             ],
             "metadata": {
                 "description": "The size of the Domain Controller virtual machine. We have given you an option of using a burstable machine for the domain controller, which in most use cases will be adequate as the CPU requirements for AD DS are not high. If you plan on running other services on top of your domain controller, consider the other options, DS2v2 (2vCPU/7GB vRAM), DS3v2 (4vCPU/14GB vRAM) or DS4v2 (8vCPU/28GB vRAM)."
