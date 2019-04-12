@@ -64,8 +64,7 @@
     "variables": {
         "dcServername": "azuredc",
         "adcServerName": "azureadc",
-        "dcNsg": "azuredc-nsg",
-        "adcNsg": "azureadc-nsg",
+        "defNsg": "default-nsg",
         "domainJoinOptions": "3",
         "adVnetName": "[concat('ADVNET',resourceGroup().name)]",
         "adSubnetName": "[concat('ADStaticSubnet',resourceGroup().name)]",
@@ -110,28 +109,7 @@
     },
     "resources": [
         {
-            "apiVersion": "2016-03-30",
-            "type": "Microsoft.Network/virtualNetworks",
-            "name": "[variables('adVnetName')]",
-            "location": "[resourceGroup().location]",
-            "properties": {
-                "addressSpace": {
-                    "addressPrefixes": [
-                        "[variables('vnetAddressRange')]"
-                    ]
-                },
-                "subnets": [
-                    {
-                        "name": "[variables('adSubnetName')]",
-                        "properties": {
-                            "addressPrefix": "[variables('subnetAddressRange')]"
-                        }
-                    }
-                ]
-            }
-        },
-        {
-            "name": "[variables('dcNsg')]",
+            "name": "[variables('defNsg')]",
             "type": "Microsoft.Network/networkSecurityGroups",
             "apiVersion": "2018-08-01",
             "location": "[resourceGroup().location]",
@@ -157,12 +135,38 @@
         },
         {
             "apiVersion": "2016-03-30",
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[variables('adVnetName')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkSecurityGroups/', variables('defNsg'))]"
+            ],
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[variables('vnetAddressRange')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[variables('adSubnetName')]",
+                        "properties": {
+                            "addressPrefix": "[variables('subnetAddressRange')]",
+                            "networksecuritygroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'default-nsg')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "2016-03-30",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "[concat(variables('dcServerName'),'-nic')]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[variables('adVnetName')]",
-                "[concat('Microsoft.Network/networkSecurityGroups/', variables('dcNsg'))]"
+                "[variables('adVnetName')]"
             ],
             "properties": {
                 "ipConfigurations": [
@@ -172,9 +176,6 @@
                             "privateIPAllocationMethod": "Dynamic",
                             "subnet": {
                                 "id": "[variables('subnet-id')]"
-                            },
-                            "networksecuritygroup": {
-                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'azuredc-nsg')]"
                             }
                         }
                     }
@@ -374,31 +375,6 @@
             }
         },
         {
-            "name": "[variables('adcNsg')]",
-            "type": "Microsoft.Network/networkSecurityGroups",
-            "apiVersion": "2018-08-01",
-            "location": "[resourceGroup().location]",
-            "properties": {
-                "securityRules": [
-                    {
-                        "name": "RDP",
-                        "properties": {
-                            "priority": 300,
-                            "protocol": "TCP",
-                            "access": "Allow",
-                            "direction": "Inbound",
-                            "sourceApplicationSecurityGroups": [],
-                            "destinationApplicationSecurityGroups": [],
-                            "sourceAddressPrefix": "*",
-                            "sourcePortRange": "*",
-                            "destinationAddressPrefix": "*",
-                            "destinationPortRange": "3389"
-                        }
-                    }
-                ]
-            }
-        },
-        {
             "apiVersion": "2016-03-30",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "[concat(variables('adcServerName'),'-nic')]",
@@ -407,8 +383,7 @@
                 "[variables('adVnetName')]",
                 "[resourceId('Microsoft.Network/networkInterfaces/', concat(variables('dcServerName'),'-nic'))]",
                 "[concat('Microsoft.Compute/virtualMachines/', variables('dcServerName'))]",
-                "[concat('Microsoft.Resources/deployments/', variables('updateVNetDNS1'))]",
-                "[concat('Microsoft.Network/networkSecurityGroups/', variables('adcNsg'))]"
+                "[concat('Microsoft.Resources/deployments/', variables('updateVNetDNS1'))]"
             ],
             "properties": {
                 "ipConfigurations": [
